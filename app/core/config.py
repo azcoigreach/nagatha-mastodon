@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-3.5-turbo"
     USE_LLM_ACTIVITY: bool = False
+    USE_LLM_TRIAGE: bool = False
     MASTODON_ACCESS_TOKEN: str = ""
     MASTODON_API_BASE: str = ""
 

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "nagatha-mastodon": {
+      "command": "python",
+      "args": ["mcp_run.py"],
+      "env": {
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "MASTODON_ACCESS_TOKEN": "${MASTODON_ACCESS_TOKEN}",
+        "MASTODON_API_BASE": "${MASTODON_API_BASE}",
+        "USE_LLM_ACTIVITY": "false",
+        "USE_LLM_TRIAGE": "false"
+      }
+    }
+  }
+} 

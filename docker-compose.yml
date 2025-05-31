@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  nagatha-mastodon-mcp:
+    build: .
+    container_name: nagatha-mastodon-mcp
+    environment:
+      # OpenAI Configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo}
+      
+      # Mastodon Configuration
+      - MASTODON_ACCESS_TOKEN=${MASTODON_ACCESS_TOKEN:-}
+      - MASTODON_API_BASE=${MASTODON_API_BASE:-}
+      
+      # LLM Feature Flags
+      - USE_LLM_ACTIVITY=${USE_LLM_ACTIVITY:-false}
+      - USE_LLM_TRIAGE=${USE_LLM_TRIAGE:-false}
+      
+      # Application Settings
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+    
+    # For stdio communication, we don't expose ports
+    # The client will interact via docker exec or stdin/stdout
+    stdin_open: true
+    tty: true
+    
+    # Optional: mount config for development
+    volumes:
+      - ./.env:/app/.env:ro
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    
+    # Health check to ensure the container is running
+    healthcheck:
+      test: ["CMD", "python", "-c", "from app.mcp_server import server; print('healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    # Restart policy
+    restart: unless-stopped 

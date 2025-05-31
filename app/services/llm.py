@@ -2,7 +2,6 @@ import logging
 import json
 
 from openai import AsyncOpenAI
-from fastapi import HTTPException
 
 from app.core.config import settings
 from app.schemas.user_eval import UserProfileIn, UserEvaluationOut
@@ -28,18 +27,18 @@ async def evaluate_user_profile(user_data: UserProfileIn) -> UserEvaluationOut:
         )
     except Exception as e:
         logging.error(f"OpenAI API error: {e}")
-        raise HTTPException(status_code=502, detail="Error contacting OpenAI API")
+        raise RuntimeError("Error contacting OpenAI API")
     content = response.choices[0].message.content
     try:
         result = json.loads(content)
     except json.JSONDecodeError as e:
         logging.error(f"JSON parse error: {e}")
-        raise HTTPException(status_code=502, detail="Invalid response from OpenAI API")
+        raise RuntimeError("Invalid response from OpenAI API")
     try:
         return UserEvaluationOut(**result)
     except Exception as e:
         logging.error(f"Validation error: {e}")
-        raise HTTPException(status_code=502, detail="Invalid data format from OpenAI API")
+        raise RuntimeError("Invalid data format from OpenAI API")
 
 async def classify_activity_pattern(posts: list[RecentPost]) -> str:
     client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)

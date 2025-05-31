@@ -2,8 +2,6 @@ import logging
 from app.core.mastodon_client import get_mastodon_client
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
-from fastapi import HTTPException
-from datetime import datetime, timedelta
 
 _executor = ThreadPoolExecutor(max_workers=4)
 
@@ -30,7 +28,7 @@ async def get_federated_peers():
         return peers
     except Exception as e:
         logging.error(f"Error fetching federated peers: {e}")
-        raise HTTPException(status_code=502, detail="Error fetching federated peers")
+        raise RuntimeError(f"Error fetching federated peers: {e}")
 
 async def get_federated_instances():
     mastodon = get_mastodon_client()
@@ -51,7 +49,7 @@ async def get_federated_instances():
         return instances
     except Exception as e:
         logging.error(f"Error fetching federated instances: {e}")
-        raise HTTPException(status_code=502, detail="Error fetching federated instances")
+        raise RuntimeError(f"Error fetching federated instances: {e}")
 
 async def get_report_summary():
     mastodon = get_mastodon_client()
@@ -73,7 +71,7 @@ async def get_report_summary():
         }
     except Exception as e:
         logging.error(f"Error fetching report summary: {e}")
-        raise HTTPException(status_code=502, detail="Error fetching report summary")
+        raise RuntimeError(f"Error fetching report summary: {e}")
 
 async def get_system_measures():
     mastodon = get_mastodon_client()
@@ -94,4 +92,4 @@ async def get_system_measures():
         return measures
     except Exception as e:
         logging.error(f"Error fetching system measures: {e}")
-        raise HTTPException(status_code=502, detail="Error fetching system measures") 
+        raise RuntimeError(f"Error fetching system measures: {e}") 

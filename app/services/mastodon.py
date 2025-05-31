@@ -4,11 +4,13 @@ from datetime import datetime
 from fastapi import HTTPException
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
+import httpx
 
 from app.core.mastodon_client import get_mastodon_client
 from app.schemas.user_eval import UserProfileIn
 from app.schemas.user_activity import RecentPost
 from app.utils.mastodon import extract_local_username, get_local_server_domain
+from app.core.config import settings
 
 _executor = ThreadPoolExecutor(max_workers=4)
 
@@ -32,7 +34,7 @@ async def get_user_profile(username: str) -> UserProfileIn:
     try:
         user = await _run_in_executor(mastodon.account_search, acct, 1)
         if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise RuntimeError("User not found")
         user = user[0]
         return UserProfileIn(
             username=user.get("acct"),
@@ -44,7 +46,7 @@ async def get_user_profile(username: str) -> UserProfileIn:
         )
     except Exception as e:
         logging.error(f"Mastodon user profile error: {e}")
-        raise HTTPException(status_code=502, detail="Error fetching user profile")
+        raise RuntimeError("Error fetching user profile")
 
 async def get_recent_posts(username: str, limit: int = 5) -> List[RecentPost]:
     mastodon = get_mastodon_client()
@@ -54,7 +56,7 @@ async def get_recent_posts(username: str, limit: int = 5) -> List[RecentPost]:
     try:
         user = await _run_in_executor(mastodon.account_search, acct, 1)
         if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise RuntimeError("User not found")
         user_id = user[0]["id"]
         statuses = await _run_in_executor(mastodon.account_statuses, user_id, limit=limit)
         posts = []
@@ -68,4 +70,4 @@ async def get_recent_posts(username: str, limit: int = 5) -> List[RecentPost]:
         return posts
     except Exception as e:
         logging.error(f"Mastodon recent posts error: {e}")
-        raise HTTPException(status_code=502, detail="Error fetching recent posts") 
+        raise RuntimeError("Error fetching recent posts") 
