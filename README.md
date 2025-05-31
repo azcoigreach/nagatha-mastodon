@@ -35,11 +35,19 @@ USE_LLM_TRIAGE=false
 ### Running the MCP Server
 
 ```bash
-# Start the MCP server
-python mcp_run.py
+# Start the MCP server (HTTP mode)
+docker-compose up
+# Or manually:
+docker build -t nagatha-mastodon-mcp .
+docker run -p 8080:8080 nagatha-mastodon-mcp
 ```
 
-The server runs in stdio mode and communicates via the MCP protocol.
+The server now runs as an HTTP service on port 8080. Clients can connect via HTTP POST/SSE to `http://<host>:8080/`.
+
+### External Access
+
+- The server is accessible at `http://localhost:8080/` (from the host)
+- Or `http://<host-ip>:8080/` (from other machines)
 
 ### Testing
 

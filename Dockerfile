@@ -31,5 +31,8 @@ ENV PYTHONUNBUFFERED=1
 # Expose no ports (stdio communication)
 # The MCP server communicates via stdin/stdout
 
-# Default command to run the MCP server
-CMD ["python", "mcp_run.py"] 
+# Expose HTTP port for MCP server
+EXPOSE 8080
+
+# Default command to run the MCP server via uvicorn
+CMD ["uvicorn", "mcp_run:app", "--host", "0.0.0.0", "--port", "8080"] 
