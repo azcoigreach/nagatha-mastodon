@@ -1,7 +1,6 @@
 import logging
 from typing import List
 from datetime import datetime
-from fastapi import HTTPException
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
 import httpx

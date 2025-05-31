@@ -26,8 +26,8 @@ services:
     tty: true
     
     # Optional: mount config for development
-    volumes:
-      - ./.env:/app/.env:ro
+    # volumes:
+      # - ./.env:/app/.env:ro
     
     # Resource limits
     deploy:
