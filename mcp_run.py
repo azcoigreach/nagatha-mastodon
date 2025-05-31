@@ -15,9 +15,10 @@ import sys
 import os
 import asyncio
 from starlette.applications import Starlette
-from starlette.routing import Route
+from starlette.routing import Mount, Route
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import Response, JSONResponse
+from starlette.types import Scope, Receive, Send
 import logging
 import anyio
 import contextlib
@@ -31,27 +32,38 @@ from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 # Create the session manager (stateless=False for session support)
 session_manager = StreamableHTTPSessionManager(server, stateless=False)
 
-# Starlette route handler
-def get_asgi_app():
-    async def mcp_endpoint(scope, receive, send):
-        await session_manager.handle_request(scope, receive, send)
-    return mcp_endpoint
+class MCPASGIApp:
+    def __init__(self, session_manager):
+        self.session_manager = session_manager
+        self._cm = None
 
-routes = [
-    Route("/", endpoint=get_asgi_app(), methods=["GET", "POST", "DELETE"]),
-]
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        if scope["type"] == "lifespan":
+            await self.lifespan(scope, receive, send)
+        else:
+            await self.session_manager.handle_request(scope, receive, send)
 
-app = Starlette(routes=routes)
+    async def lifespan(self, scope, receive, send):
+        while True:
+            message = await receive()
+            if message["type"] == "lifespan.startup":
+                self._cm = self.session_manager.run()
+                await self._cm.__aenter__()
+                await send({"type": "lifespan.startup.complete"})
+            elif message["type"] == "lifespan.shutdown":
+                if self._cm:
+                    await self._cm.__aexit__(None, None, None)
+                await send({"type": "lifespan.shutdown.complete"})
+                break
 
-# Starlette lifespan to manage MCP session manager lifecycle
-@app.on_event("startup")
-async def startup():
-    app.state.session_manager_cm = session_manager.run()
-    await app.state.session_manager_cm.__aenter__()
+mcp_asgi_app = MCPASGIApp(session_manager)
 
-@app.on_event("shutdown")
-async def shutdown():
-    await app.state.session_manager_cm.__aexit__(None, None, None)
+app = Starlette(
+    routes=[
+        Route("/", lambda request: JSONResponse({"status": "ok"})),
+        Mount("/mcp", app=mcp_asgi_app),
+    ]
+)
 
 if __name__ == "__main__":
     asyncio.run(run_server()) 
